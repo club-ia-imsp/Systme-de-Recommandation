@@ -1,0 +1,82 @@
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { Toaster } from 'react-hot-toast'
+import { AuthProvider } from '@/contexts/AuthContext'
+import { ThemeProvider } from '@/contexts/ThemeContext'
+import Layout from '@/components/Layout'
+import ProtectedRoute from '@/components/ProtectedRoute'
+import HomePage from '@/pages/HomePage'
+import LoginPage from '@/pages/LoginPage'
+import RegisterPage from '@/pages/RegisterPage'
+import ProfilePage from '@/pages/ProfilePage'
+import EpreuvesListPage from '@/pages/EpreuvesListPage'
+import EpreuveDetailPage from '@/pages/EpreuveDetailPage'
+import UploadEpreuvePage from '@/pages/UploadEpreuvePage'
+import AdminPage from '@/pages/AdminPage'
+import TestPage from '@/pages/TestPage'
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+})
+
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <AuthProvider>
+          <Router basename={import.meta.env.BASE_URL}>
+            <Layout>
+            <Routes>
+              <Route path="/test" element={<TestPage />} />
+              <Route path="/" element={<HomePage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/epreuves" element={<EpreuvesListPage />} />
+              <Route 
+                path="/epreuves/:id" 
+                element={
+                  <ProtectedRoute>
+                    <EpreuveDetailPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/upload" 
+                element={
+                  <ProtectedRoute>
+                    <UploadEpreuvePage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/profile" 
+                element={
+                  <ProtectedRoute>
+                    <ProfilePage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route
+                path="/admin-panel"
+                element={
+                  <ProtectedRoute>
+                    <AdminPage />
+                  </ProtectedRoute>
+                }
+              />
+            </Routes>
+          </Layout>
+          </Router>
+          <Toaster position="top-right" />
+        </AuthProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  )
+}
+
+export default App

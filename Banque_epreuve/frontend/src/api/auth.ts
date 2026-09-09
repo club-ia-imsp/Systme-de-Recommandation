@@ -1,0 +1,59 @@
+import apiClient from './client'
+import type { User, LoginCredentials, RegisterData, AuthResponse } from '@/types'
+
+export const authAPI = {
+  login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
+    const response = await apiClient.post<{ access: string; refresh: string }>('/token/', credentials)
+    
+    // Get user info with the token
+    const userResponse = await apiClient.get<User>('/users/me/', {
+      headers: { Authorization: `Bearer ${response.data.access}` }
+    })
+    
+    return {
+      access: response.data.access,
+      refresh: response.data.refresh,
+      user: userResponse.data
+    }
+  },
+
+  register: async (data: RegisterData): Promise<AuthResponse> => {
+    // Utiliser le nouvel endpoint public d'inscription
+    await apiClient.post('/auth/register/', data)
+    
+    // Auto-login après inscription
+    const loginResponse = await authAPI.login({
+      username: data.username,
+      password: data.password
+    })
+    
+    return loginResponse
+  },
+
+  getCurrentUser: async (): Promise<User> => {
+    const response = await apiClient.get<User>('/users/me/')
+    return response.data
+  },
+
+  updateProfile: async (data: FormData): Promise<User> => {
+    const response = await apiClient.patch<User>('/users/me/update/', data, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+    return response.data
+  },
+
+  deletePhoto: async (): Promise<void> => {
+    await apiClient.delete('/users/me/photo/')
+  },
+
+  refreshToken: async (refreshToken: string): Promise<{ access: string }> => {
+    const response = await apiClient.post<{ access: string }>('/token/refresh/', {
+      refresh: refreshToken,
+    })
+    return response.data
+  },
+
+  logout: async (): Promise<void> => {
+    return Promise.resolve()
+  },
+}
